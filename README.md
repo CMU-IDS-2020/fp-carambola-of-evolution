@@ -2,11 +2,9 @@
 
 * **Online URL**: TODO
 * **Team members**:
-  * Contact person: TODO@andrew.cmu.edu
-  * TODO@andrew.cmu.edu
-  * TODO@andrew.cmu.edu
-  * TODO@andrew.cmu.edu
-* **Track**: TODO (one of Narrative, Model, or Interactive Visualization/Application)
+  * Contact person: imarkevy@andrew.cmu.edu
+  * hyungony@andrew.cmu.edu
+* **Track**: Model
 
 ## Work distribution
 
@@ -17,7 +15,7 @@ Update towards the end of the project.
 ### Proposal
 
 - [ ] The URL at the top of this readme needs to point to your application online. It should also list the names of the team members.
-- [ ] A completed proposal. The contact should submit it as a PDF on Canvas.
+- [x] A completed proposal. The contact should submit it as a PDF on Canvas.
 
 ### Design review
 
