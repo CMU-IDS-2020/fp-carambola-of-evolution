@@ -169,52 +169,52 @@ if text != "":
         'pred': labels})
 
     selector_embs = alt.selection_interval(empty='all', encodings=['x', 'y'])
-    row1_1, row1_2, row1_3 = st.beta_columns((1, 1, 1))
-    with row1_1:
-        words_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
-            x = 'x_raw',
-            y = 'y_raw',
-            tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
-            color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                      range=['red', 'green', 'blue'])),
-            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-        ).properties(
-            title='Raw sentences'
-        ).add_selection(
-            selector_embs
-        )
-        st.altair_chart(words_tsned)
+    #row1_1, row1_2, row1_3 = st.beta_columns((1, 1, 1))
+    #with row1_1:
+    words_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
+        x = 'x_raw',
+        y = 'y_raw',
+        tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
+        color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
+                                                  range=['red', 'green', 'blue'])),
+        opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
+    ).properties(
+        title='Raw sentences'
+    ).add_selection(
+        selector_embs
+    )
+     #   st.altair_chart(words_tsned)
 
-    with row1_2:
-        interm_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
-            x = 'x_interm',
-            y = 'y_interm',
-            tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
-            color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                      range=['red', 'green', 'blue'])),
-            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-        ).properties(
-            title='Intermediate state sentences'
-        ).add_selection(
-            selector_embs
-        )
-        st.altair_chart(interm_tsned)
+    #with row1_2:
+    interm_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
+        x = 'x_interm',
+        y = 'y_interm',
+        tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
+        color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
+                                                  range=['red', 'green', 'blue'])),
+        opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
+    ).properties(
+        title='Intermediate state sentences'
+    ).add_selection(
+        selector_embs
+    )
+     #   st.altair_chart(interm_tsned)
 
-    with row1_3:
-        sentences_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
-            x = 'x_proc',
-            y = 'y_proc',
-            tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
-            color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                      range=['red', 'green', 'blue'])),
-            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-        ).properties(
-            title='Processed sentences'
-        ).add_selection(
-            selector_embs
-        )
-        st.altair_chart(sentences_tsned)
-
+    #with row1_3:
+    sentences_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
+        x = 'x_proc',
+        y = 'y_proc',
+        tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
+        color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
+                                                  range=['red', 'green', 'blue'])),
+        opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
+    ).properties(
+        title='Processed sentences'
+    ).add_selection(
+        selector_embs
+    )
+    #    st.altair_chart(sentences_tsned)
+    st.altair_chart(words_tsned | interm_tsned | sentences_tsned, use_container_width=True)
 
     distances = [cosine(emb, other) for other in embedding[:-1, :]]
     main_df["probs"] = probs[:-1] # note +1 user's label
