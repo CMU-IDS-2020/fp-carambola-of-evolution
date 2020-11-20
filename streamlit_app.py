@@ -164,6 +164,7 @@ if text != "":
         'x_proc': tsned_space_proc_emb[:,0],
         'y_proc': tsned_space_proc_emb[:,1],
         'sentence': sentences,
+	'opacity': np.abs(probs),
         'prob': probs.astype(str),
         'pred': labels})
 
@@ -176,8 +177,7 @@ if text != "":
             tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
             color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
                                                       range=['red', 'green', 'blue'])),
-            #opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-            opacity=alt.Opacity('prob', legend=None)
+            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
         ).properties(
             title='Raw sentences'
         ).add_selection(
@@ -192,8 +192,7 @@ if text != "":
             tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
             color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
                                                       range=['red', 'green', 'blue'])),
-            #opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-            opacity=alt.Opacity('prob', legend=None)
+            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
         ).properties(
             title='Intermediate state sentences'
         ).add_selection(
@@ -208,8 +207,7 @@ if text != "":
             tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
             color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
                                                       range=['red', 'green', 'blue'])),
-            #opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-            opacity=alt.Opacity('prob', legend=None)
+            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
         ).properties(
             title='Processed sentences'
         ).add_selection(
