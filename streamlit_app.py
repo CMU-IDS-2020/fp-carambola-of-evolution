@@ -8,8 +8,9 @@ from sklearn.manifold import TSNE
 from tensorflow.keras import layers
 import tensorflow_datasets as tfds
 from scipy.spatial.distance import cosine
-#import sklearn.manifold.LocallyLinearEmbedding as LLE
 
+HEIGHT = 200
+WIDTH = 200
 
 BUFFER_SIZE = 10000
 BATCH_SIZE = 64
@@ -93,21 +94,15 @@ def color_text(text, model):
     return " ".join(colored_texts), pred
 
 
-main_df = load_data("combined_sentiment_labelled.tsv")
-# embeddings
-embedding = load_pickled("train_embedding.pkl")
-#tsned_space_raw_emb = load_pickled("tsne_space_raw_embedding.pkl")
-#tsned_space_intermediate_emb = load_pickled("tsne_space_interm_embedding.pkl")
-#tsned_space_proc_emb = load_pickled("tsne_space_proc_embedding.pkl")
+st.title("Explaining RNNs")
 
-# t-SNEs
-#tsned_space_raw = load_pickled("tsne_space_raw.pkl")
-#tsned_space_intermediate = load_pickled("tsne_space_interm.pkl")
-#tsned_space_proc = load_pickled("tsne_space_proc.pkl")
+main_df = load_data("combined_sentiment_labelled.tsv")
+
+embedding = load_pickled("train_embedding.pkl")
 
 np.random.seed(SEED)
 
-st.write(main_df.head())
+# st.write(main_df.head())
 
 main_model = load_main_model("first_model/")
 
@@ -127,6 +122,17 @@ sen2vec_model_interm = tf.keras.Sequential([
     main_model.get_layer(name='lstm')
 ])
 
+st.markdown(
+    f'''
+        <style>
+            .sidebar .sidebar-content {{
+                width: 400px;
+            }}
+        </style>
+    ''',
+    unsafe_allow_html=True
+)
+
 n_neighbor = st.slider(
     "Choose the number of neighboring reviews to find",
     min_value=50, max_value=len(main_df), value=50, step=50
@@ -139,8 +145,9 @@ embedding = embedding[ixs, :]
 text = st.text_input("Type your review!")
 if text != "":
     color_text, label = color_text(text, main_model)
-
-    st.markdown(color_text, unsafe_allow_html=True)
+    
+    st.markdown('## Inference:')
+    st.markdown(label + " | " + color_text, unsafe_allow_html=True)
 
     # add user's
     sentences = np.append(main_df["text"].values, text)
@@ -169,8 +176,7 @@ if text != "":
         'pred': labels})
 
     selector_embs = alt.selection_interval(empty='all', encodings=['x', 'y'])
-    #row1_1, row1_2, row1_3 = st.beta_columns((1, 1, 1))
-    #with row1_1:
+
     words_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
         x = 'x_raw',
         y = 'y_raw',
@@ -179,13 +185,13 @@ if text != "":
                                                   range=['red', 'green', 'blue'])),
         opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
     ).properties(
-        title='Raw sentences'
+        title='Raw sentences',
+        height=HEIGHT,
+        width=WIDTH
     ).add_selection(
         selector_embs
     )
-     #   st.altair_chart(words_tsned)
 
-    #with row1_2:
     interm_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
         x = 'x_interm',
         y = 'y_interm',
@@ -194,13 +200,13 @@ if text != "":
                                                   range=['red', 'green', 'blue'])),
         opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
     ).properties(
-        title='Intermediate state sentences'
+        title='Intermediate state sentences',
+        height=HEIGHT,
+        width=WIDTH
     ).add_selection(
         selector_embs
     )
-     #   st.altair_chart(interm_tsned)
 
-    #with row1_3:
     sentences_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
         x = 'x_proc',
         y = 'y_proc',
@@ -209,23 +215,20 @@ if text != "":
                                                   range=['red', 'green', 'blue'])),
         opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
     ).properties(
-        title='Processed sentences'
+        title='Processed sentences',
+        height=HEIGHT,
+        width=WIDTH
     ).add_selection(
         selector_embs
     )
-    #    st.altair_chart(sentences_tsned)
-    st.altair_chart(words_tsned | interm_tsned | sentences_tsned, use_container_width=True)
+        
+    st.altair_chart(words_tsned | interm_tsned | sentences_tsned)
 
     distances = [cosine(emb, other) for other in embedding[:-1, :]]
     main_df["probs"] = probs[:-1] # note +1 user's label
     main_df["distance"] = distances
-    sorted_ixs = np.argsort(distances)
+    sorted_ixs = np.argsort(distances)[:5]
 
-    st.write("These are the probabilities assigned for your neighboring reviews",
-             main_df.iloc[sorted_ixs, :])
-    #st.write("These are the top 5 reviews that are the closest to yours: ",
-    #         main_df.iloc[sorted_ixs, :].head(5))
-
-    #st.write("These are the top 5 reviews that are the farthest to yours: ",
-    #         main_df.iloc[sorted_ixs[::-1], :].head(5))
-
+    st.write("These are the probabilities assigned for your neighboring reviews:")
+    for _, row in main_df.iloc[sorted_ixs, :].iterrows():
+        st.write("* " + row.text)
