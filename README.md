@@ -14,13 +14,13 @@ Update towards the end of the project.
 
 ### Proposal
 
-- [ ] The URL at the top of this readme needs to point to your application online. It should also list the names of the team members.
+- [x] The URL at the top of this readme needs to point to your application online. It should also list the names of the team members.
 - [x] A completed proposal. The contact should submit it as a PDF on Canvas.
 
 ### Design review
 
-- [ ] Develop a prototype of your project.
-- [ ] Create a 5 minute video to demonstrate your project and lists any question you have for the course staff. The contact should submit the video on Canvas.
+- [x] Develop a prototype of your project.
+- [x] Create a 5 minute video to demonstrate your project and lists any question you have for the course staff. The contact should submit the video on Canvas.
 
 ### Final deliverables
 
