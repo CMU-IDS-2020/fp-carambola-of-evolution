@@ -140,7 +140,7 @@ embedding = embedding[ixs, :]
 st.markdown('## Inference:')
 
 def sample_inference():
-    idx = np.random.randint(0, len(main_df), size=5)
+    idx = np.random.randint(0, len(colored), size=5)
     for i in idx:
         st.markdown(colored[i], unsafe_allow_html=True)
 
