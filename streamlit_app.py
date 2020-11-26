@@ -50,12 +50,12 @@ def load_main_model():
     dataset = tfds.load('imdb_reviews', as_supervised=True)
     train_dataset = dataset["train"]
     train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).prefetch(tf.data.experimental.AUTOTUNE)
-    
+
     VOCAB_SIZE=5000
     encoder = tf.keras.layers.experimental.preprocessing.TextVectorization(
             max_tokens=VOCAB_SIZE)
     encoder.adapt(train_dataset.map(lambda text, label: text))
-    
+
     model = tf.keras.Sequential([
         encoder,
         tf.keras.layers.Embedding(
@@ -107,6 +107,8 @@ np.random.seed(SEED)
 
 main_model = load_main_model()
 
+colored = load_pickled('colored.txt')
+
 def sen2vec(x):
     return main_model.get_layer(name='embedding')(main_model.get_layer(name="text_vectorization")(x))
 
@@ -134,23 +136,46 @@ main_df = main_df.iloc[ixs, :]
 embedding = embedding[ixs, :]
 
 
-text = st.text_input("Type your review!")
+
+st.markdown('## Inference:')
+
+def sample_inference():
+    idx = np.random.randint(0, len(main_df), size=5)
+    for i in idx:
+        st.markdown(colored[i], unsafe_allow_html=True)
+
+if st.button('Sample another reviews'):
+    sample_inference()
+else:
+    sample_inference()
+
+
+
+
+
+st.markdown('## Training:')
+
+if st.button('Sample random review'):
+    review = main_df.iloc[np.random.randint(0, len(main_df))].text
+    text = st.text_input("Type your review!", review)
+else:
+    text = st.text_input("Type your review!")
+
 if text != "":
-    
-    st.markdown('## Training:')
+
     sentences = np.append(main_df["text"].values, text)
-    
+
     for i in range(6):
         main_model.load_weights(f'./training/cp-000{i}.ckpt')
         pred = color_text(text, model=main_model)
-        st.markdown(f"Epoch {i}" + " | " + 
-                    ("NEG" if pred[1] < 0 else "POS") + " | " + 
-                    str(probability(pred[1])) + " | " + 
-                    pred[0], 
-                    unsafe_allow_html=True)  
-    
+        st.markdown(f"Epoch {i}" + " | " +
+                    ("NEG" if pred[1] < 0 else "POS") + " | " +
+                    str(probability(pred[1])) + " | " +
+                    pred[0],
+                    unsafe_allow_html=True)
+
     for i in range(6):
-        main_model.load_weights(f'./training/cp-000{i}.ckpt')    
+        main_model.load_weights(f'./training/cp-000{i}.ckpt')
         probs = main_model.predict(sentences).reshape(-1).round(2)
         labels = ['Positive' if x else 'Negative'
                   for x in (probs.reshape(-1) > 0)]
@@ -162,7 +187,7 @@ if text != "":
         tsned_space_raw_emb = tsne.fit_transform(sen2vec([[x] for x in sentences]).numpy().mean(axis=1))
         tsned_space_proc_emb = tsne.fit_transform(sen2vec_model.predict(sentences))
         tsned_space_intermediate_emb = tsne.fit_transform(embedding_ep)
-                
+
         tsne_plot_data = pd.DataFrame({
             'x_raw': tsned_space_raw_emb[:,0],
             'y_raw': tsned_space_raw_emb[:,1],
@@ -174,9 +199,9 @@ if text != "":
             'opacity': np.abs(probs),
             'prob': probability(probs).astype(str),
             'pred': labels})
-    
+
         selector_embs = alt.selection_interval(empty='all', encodings=['x', 'y'])
-    
+
         words_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
             x = 'x_raw',
             y = 'y_raw',
@@ -191,7 +216,7 @@ if text != "":
         ).add_selection(
             selector_embs
         )
-    
+
         interm_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
             x = 'x_interm',
             y = 'y_interm',
@@ -206,7 +231,7 @@ if text != "":
         ).add_selection(
             selector_embs
         )
-    
+
         sentences_tsned = alt.Chart(tsne_plot_data).mark_circle(size=200).encode(
             x = 'x_proc',
             y = 'y_proc',
@@ -221,7 +246,7 @@ if text != "":
         ).add_selection(
             selector_embs
         )
-            
+
         st.altair_chart(words_tsned | interm_tsned | sentences_tsned)
 
 #    distances = [cosine(emb, other) for other in embedding[:-1, :]]
