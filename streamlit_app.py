@@ -80,11 +80,11 @@ def get_ixs(n_train, n_neighbor):
 def color_text(text, model):
     def make_colored_text(text, p, probs):
         if abs(p / max(np.abs(probs))) < 0.1:
-            return f"<span style='color:grey'>{text}</span>"
+            return f"<span style='color:grey; opacity:0.3'>{text}</span>"
         elif p < 0:
-            return f"<span style='color:red'>{text}</span>"
+            return f"<span style='color:red; opacity:{abs(p / max(np.abs(probs))) + 0.2}'>{text}</span>"
         else:
-            return f"<span style='color:green'>{text}</span>"
+            return f"<span style='color:green; opacity:{abs(p / max(np.abs(probs))) + 0.2}'>{text}</span>"
 
     tokens = text.split(" ")
     probs = [0]
