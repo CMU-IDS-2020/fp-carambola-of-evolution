@@ -157,9 +157,9 @@ st.markdown('## Training:')
 
 if st.button('Sample random review'):
     review = main_df.iloc[np.random.randint(0, len(main_df))].text
-    text = st.text_input("Type your review!", review)
+    text = st.text_input("Or type your review!", review)
 else:
-    text = st.text_input("Type your review!")
+    text = st.text_input("Or type your review!")
 
 if text != "":
 
@@ -175,6 +175,7 @@ if text != "":
                     unsafe_allow_html=True)
 
     for i in range(6):
+        st.markdown(f'#### Epoch {i}')
         main_model.load_weights(f'./training/cp-000{i}.ckpt')
         probs = main_model.predict(sentences).reshape(-1).round(2)
         labels = ['Positive' if x else 'Negative'
