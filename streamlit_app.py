@@ -1,5 +1,4 @@
 import re
-import umap
 import time
 import nltk
 import pickle
@@ -132,8 +131,6 @@ def load_main_model():
 
     model.compile()
 
-    model.load_weights('./training/cp-0001.ckpt')
-
     return model
 
 @st.cache(allow_output_mutation=True)
@@ -166,192 +163,170 @@ def color_text(text, model):
     return " ".join(colored_texts), fin_prob
 
 
-def main():
-    st.title("Explaining RNNs")
+st.title("Explaining RNNs")
 
-    main_df = load_data("combined_sentiment_labelled.tsv")
+main_df = load_data("combined_sentiment_labelled.tsv")
 
-    #embedding = load_pickled("train_embedding.pkl")
+#embedding = load_pickled("train_embedding.pkl")
 
-    #np.random.seed(SEED)
+#np.random.seed(SEED)
 
-    main_model = load_main_model()
+main_model = load_main_model()
 
-    colored = load_pickled('colored.txt')
+colored = load_pickled('colored.txt')
 
-    def sen2vec(x):
-        x = np.array([[process_text(xx[0])] for xx in x])
-        return main_model.get_layer(name='embedding')(main_model.get_layer(name="text_vectorization")(x))
+def sen2vec(x):
+    x = np.array([[process_text(xx[0])] for xx in x])
+    return main_model.get_layer(name='embedding')(main_model.get_layer(name="text_vectorization")(x))
 
-    sen2vec_model = tf.keras.Sequential([
-            main_model.get_layer(name="text_vectorization"),
-            main_model.get_layer(name='embedding'),
-            main_model.get_layer(name='lstm'),
-            main_model.get_layer(name='dense')
-        ])
-
-    sen2vec_model_interm = tf.keras.Sequential([
+sen2vec_model = tf.keras.Sequential([
         main_model.get_layer(name="text_vectorization"),
         main_model.get_layer(name='embedding'),
-        main_model.get_layer(name='lstm')
+        main_model.get_layer(name='lstm'),
+        main_model.get_layer(name='dense')
     ])
 
+sen2vec_model_interm = tf.keras.Sequential([
+    main_model.get_layer(name="text_vectorization"),
+    main_model.get_layer(name='embedding'),
+    main_model.get_layer(name='lstm')
+])
 
-    n_neighbor = st.slider(
-        "Choose the number of neighboring reviews to find",
-        min_value=50, max_value=len(main_df), value=50, step=50
+
+n_neighbor = st.slider(
+    "Choose the number of neighboring reviews to find",
+    min_value=50, max_value=len(main_df), value=50, step=50
+    )
+n_neighbor = 500 #fix
+
+#ixs = get_ixs(len(main_df), n_neighbor)
+ixs = list(range(n_neighbor))
+main_df = main_df.iloc[ixs, :]
+#embedding = embedding[ixs, :]
+
+
+
+st.markdown('## Inference:')
+
+def sample_inference():
+    idx = np.random.randint(0, len(colored), size=5)
+    for i in idx:
+        st.markdown(colored[i], unsafe_allow_html=True)
+
+if st.button('Sample another reviews'):
+    sample_inference()
+else:
+    sample_inference()
+
+
+
+
+
+st.markdown('## Training:')
+
+if st.button('Sample random review'):
+    review = main_df.iloc[np.random.randint(0, len(main_df))].text
+    text = st.text_input("Or type your review!", review)
+else:
+    text = st.text_input("Or type your review!")
+
+if text != "":
+
+    sentences = np.append(main_df["text"].values, text)
+
+    for i in range(0, 11, 2):
+        main_model.load_weights(f"epoch{i}/")
+        pred = color_text(text, model=main_model)
+        st.markdown(f"Epoch {i}" + " | " +
+                    ("NEG" if pred[1] < 0 else "POS") + " | " +
+                    str(probability(pred[1])) + " | " +
+                    pred[0],
+                    unsafe_allow_html=True)
+
+    #for i in range(0, 11, 2):
+    for i in [0, 4, 10]:
+        st.markdown(f'#### Epoch {i}')
+        isomap_raw = load_pickled(f'./embedding/isomap-raw-{i}.pkl')
+        isomap_intermediate = load_pickled(f'./embedding/isomap-intermediate-{i}.pkl')
+        isomap_proc = load_pickled(f'./embedding/isomap-proc-{i}.pkl')
+
+
+        probs = predict(main_model, sentences).reshape(-1).round(2)
+        labels = ['Positive' if x else 'Negative'
+                  for x in (probs.reshape(-1) > 0)]
+        labels[-1] = "User"
+
+        raw_emb_text = isomap_raw.transform(
+            sen2vec([[text]]).numpy().mean(axis=1)
+            )
+        isomap_raw_emb = np.append(isomap_raw.embedding_, raw_emb_text, axis=0)
+
+        intermediate_emb_text = isomap_intermediate.transform(
+            predict(sen2vec_model_interm, [text])
+            )
+        isomap_intermediate_emb = np.append(isomap_intermediate.embedding_,
+                                          intermediate_emb_text,
+                                          axis=0)
+
+        proc_emb_text = isomap_proc.transform(predict(sen2vec_model, [text]))
+        isomap_proc_emb = np.append(isomap_proc.embedding_, proc_emb_text, axis=0)
+        plot_data = pd.DataFrame({
+            'x_raw': isomap_raw_emb[:,0],
+            'y_raw': isomap_raw_emb[:,1],
+            'x_interm': isomap_intermediate_emb[:,0],
+            'y_interm': isomap_intermediate_emb[:,1],
+            'x_proc': isomap_proc_emb[:,0],
+            'y_proc': isomap_proc_emb[:,1],
+            'sentence': sentences,
+            'opacity': np.abs(probs),
+            'prob': probability(probs).astype(str),
+            'pred': labels})
+
+        selector_embs = alt.selection_interval(empty='all', encodings=['x', 'y'])
+
+        words_tsned = alt.Chart(plot_data).mark_circle(size=200).encode(
+            x = 'x_raw',
+            y = 'y_raw',
+            tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
+            color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
+                                                      range=['red', 'green', 'blue'])),
+            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
+        ).properties(
+            title='Raw sentences',
+            height=HEIGHT,
+            width=WIDTH
+        ).add_selection(
+            selector_embs
         )
-    n_neighbor = 3000 #fix
 
-    #ixs = get_ixs(len(main_df), n_neighbor)
-    #main_df = main_df.iloc[ixs, :]
-    #embedding = embedding[ixs, :]
+        interm_tsned = alt.Chart(plot_data).mark_circle(size=200).encode(
+            x = 'x_interm',
+            y = 'y_interm',
+            tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
+            color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
+                                                      range=['red', 'green', 'blue'])),
+            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
+        ).properties(
+            title='Intermediate state sentences',
+            height=HEIGHT,
+            width=WIDTH
+        ).add_selection(
+            selector_embs
+        )
 
+        sentences_tsned = alt.Chart(plot_data).mark_circle(size=200).encode(
+            x = 'x_proc',
+            y = 'y_proc',
+            tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
+            color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
+                                                      range=['red', 'green', 'blue'])),
+            opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
+        ).properties(
+            title='Processed sentences',
+            height=HEIGHT,
+            width=WIDTH
+        ).add_selection(
+            selector_embs
+        )
 
-
-    st.markdown('## Inference:')
-
-    def sample_inference():
-        idx = np.random.randint(0, len(colored), size=5)
-        for i in idx:
-            st.markdown(colored[i], unsafe_allow_html=True)
-
-    if st.button('Sample another reviews'):
-        sample_inference()
-    else:
-        sample_inference()
-
-
-
-
-
-    st.markdown('## Training:')
-
-    if st.button('Sample random review'):
-        review = main_df.iloc[np.random.randint(0, len(main_df))].text
-        text = st.text_input("Or type your review!", review)
-    else:
-        text = st.text_input("Or type your review!")
-
-    if text != "":
-
-        sentences = np.append(main_df["text"].values, text)
-
-        for i in range(0, 11, 2):
-            fname = f'./training/cp-000{i}.ckpt' if i < 10 else f'./training/cp-00{i}.ckpt'
-
-
-            main_model.load_weights(fname)
-            pred = color_text(text, model=main_model)
-            st.markdown(f"Epoch {i}" + " | " +
-                        ("NEG" if pred[1] < 0 else "POS") + " | " +
-                        str(probability(pred[1])) + " | " +
-                        pred[0],
-                        unsafe_allow_html=True)
-
-        #for i in range(0, 11, 2):
-        for i in [0, 4, 10]:
-            st.markdown(f'#### Epoch {i}')
-            fname = f'./training/cp-000{i}.ckpt' if i < 10 else f'./training/cp-00{i}.ckpt'
-            main_model.load_weights(fname)
-
-            umap_raw = load_pickled(f'./embedding/umap-raw-{i}.pkl')
-            umap_intermediate = load_pickled(f'./embedding/umap-intermediate-{i}.pkl')
-            umap_proc = load_pickled(f'./embedding/umap-proc-{i}.pkl')
-
-
-            probs = predict(main_model, sentences).reshape(-1).round(2)
-            labels = ['Positive' if x else 'Negative'
-                      for x in (probs.reshape(-1) > 0)]
-            labels[-1] = "User"
-
-            raw_emb_text = umap_raw.transform(
-                sen2vec([[text]]).numpy().mean(axis=1)
-                )
-            umap_raw_emb = np.append(umap_raw.embedding_, raw_emb_text, axis=0)
-
-            intermediate_emb_text = umap_intermediate.transform(
-                predict(sen2vec_model_interm, [text])
-                )
-            umap_intermediate_emb = np.append(umap_intermediate.embedding_,
-                                              intermediate_emb_text,
-                                              axis=0)
-
-            proc_emb_text = umap_proc.transform(predict(sen2vec_model, [text]))
-            umap_proc_emb = np.append(umap_proc.embedding_, proc_emb_text, axis=0)
-            plot_data = pd.DataFrame({
-                'x_raw': umap_raw_emb[:,0],
-                'y_raw': umap_raw_emb[:,1],
-                'x_interm': umap_intermediate_emb[:,0],
-                'y_interm': umap_intermediate_emb[:,1],
-                'x_proc': umap_proc_emb[:,0],
-                'y_proc': umap_proc_emb[:,1],
-                'sentence': sentences,
-                'opacity': np.abs(probs),
-                'prob': probability(probs).astype(str),
-                'pred': labels})
-
-            selector_embs = alt.selection_interval(empty='all', encodings=['x', 'y'])
-
-            words_tsned = alt.Chart(plot_data).mark_circle(size=200).encode(
-                x = 'x_raw',
-                y = 'y_raw',
-                tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
-                color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                          range=['red', 'green', 'blue'])),
-                opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-            ).properties(
-                title='Raw sentences',
-                height=HEIGHT,
-                width=WIDTH
-            ).add_selection(
-                selector_embs
-            )
-
-            interm_tsned = alt.Chart(plot_data).mark_circle(size=200).encode(
-                x = 'x_interm',
-                y = 'y_interm',
-                tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
-                color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                          range=['red', 'green', 'blue'])),
-                opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-            ).properties(
-                title='Intermediate state sentences',
-                height=HEIGHT,
-                width=WIDTH
-            ).add_selection(
-                selector_embs
-            )
-
-            sentences_tsned = alt.Chart(plot_data).mark_circle(size=200).encode(
-                x = 'x_proc',
-                y = 'y_proc',
-                tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
-                color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                          range=['red', 'green', 'blue'])),
-                opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
-            ).properties(
-                title='Processed sentences',
-                height=HEIGHT,
-                width=WIDTH
-            ).add_selection(
-                selector_embs
-            )
-
-            st.altair_chart(words_tsned | interm_tsned | sentences_tsned)
-
-    #    distances = [cosine(emb, other) for other in embedding[:-1, :]]
-    #    main_df["probs"] = probs[:-1] # note +1 user's label
-    #    main_df["distance"] = distances
-    #    sorted_ixs = np.argsort(distances)[:5]
-
-    #    st.write("These are the probabilities assigned for your neighboring reviews:")
-    #    for _, row in main_df.iloc[sorted_ixs, :].iterrows():
-    #        st.write("* " + row.text)
-
-if __name__ == '__main__':
-    while True:
-        try:
-            main()
-        except:
-            time.sleep(1)
+        st.altair_chart(words_tsned | interm_tsned | sentences_tsned)
