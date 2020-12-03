@@ -248,7 +248,8 @@ def main():
                         pred[0],
                         unsafe_allow_html=True)
 
-        for i in range(0, 11, 2):
+        #for i in range(0, 11, 2):
+        for i in [0, 4, 10]:
             st.markdown(f'#### Epoch {i}')
             fname = f'./training/cp-000{i}.ckpt' if i < 10 else f'./training/cp-00{i}.ckpt'
             main_model.load_weights(fname)
