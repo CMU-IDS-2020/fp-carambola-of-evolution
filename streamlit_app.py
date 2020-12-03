@@ -51,7 +51,7 @@ def load_main_model():
     train_dataset = dataset["train"]
     train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).prefetch(tf.data.experimental.AUTOTUNE)
 
-    VOCAB_SIZE=5000
+    VOCAB_SIZE=10000
     encoder = tf.keras.layers.experimental.preprocessing.TextVectorization(
             max_tokens=VOCAB_SIZE)
     encoder.adapt(train_dataset.map(lambda text, label: text))
