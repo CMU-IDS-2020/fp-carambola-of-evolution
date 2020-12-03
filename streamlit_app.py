@@ -348,7 +348,7 @@ def main():
     #    for _, row in main_df.iloc[sorted_ixs, :].iterrows():
     #        st.write("* " + row.text)
 
-if __name__ == '__init__':
+if __name__ == '__main__':
     while True:
         try:
             main()
