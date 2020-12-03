@@ -171,7 +171,7 @@ main_df = load_data("combined_sentiment_labelled.tsv")
 
 #embedding = load_pickled("train_embedding.pkl")
 
-np.random.seed(SEED)
+#np.random.seed(SEED)
 
 main_model = load_main_model()
 
