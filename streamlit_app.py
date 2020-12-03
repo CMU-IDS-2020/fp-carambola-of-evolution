@@ -42,7 +42,7 @@ except:
 lemmatizer = nltk.stem.wordnet.WordNetLemmatizer()
 english_stopwords = set(nltk.corpus.stopwords.words('english'))
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def process_text(text):
     def get_pos(tag):
         if tag.startswith("J"):
