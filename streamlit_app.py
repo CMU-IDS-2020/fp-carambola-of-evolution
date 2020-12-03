@@ -1,5 +1,6 @@
 import re
 import umap
+import time
 import nltk
 import pickle
 import string
