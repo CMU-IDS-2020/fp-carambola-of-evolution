@@ -108,7 +108,7 @@ def load_embedding(file_name):
 #@st.cache(allow_output_mutation=True)
 def load_main_model():
     dataset = tfds.load('imdb_reviews', as_supervised=True)
-    X_train = load_pickled("X_train.pkl")
+    X_train = load_pickled("v.pkl")
 
     VOCAB_SIZE=10000
     encoder = tf.keras.layers.experimental.preprocessing.TextVectorization(
