@@ -5,3 +5,5 @@ streamlit
 tensorflow==2.2.0
 scikit-learn
 tensorflow_datasets
+nltk
+umap-learn
