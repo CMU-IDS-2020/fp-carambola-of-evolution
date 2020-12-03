@@ -99,7 +99,7 @@ def load_data(file_name):
 @st.cache(allow_output_mutation=True)
 def load_pickled(file_name):
     with open(file_name, "rb") as r_obj:
-        return pickle.load(r_obj)
+        return pickle.load(r_obj, encoding="utf-8")
 
 @st.cache(allow_output_mutation=True)
 def load_embedding(file_name):
