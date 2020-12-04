@@ -1,5 +1,5 @@
 import re
-import time
+#import time
 import nltk
 import pickle
 import string
@@ -107,7 +107,7 @@ def load_embedding(file_name):
 
 #@st.cache(allow_output_mutation=True)
 def load_main_model():
-    dataset = tfds.load('imdb_reviews', as_supervised=True)
+    #dataset = tfds.load('imdb_reviews', as_supervised=True)
     X_train = load_pickled("v.pkl")
 
     VOCAB_SIZE=10000
@@ -162,14 +162,17 @@ def color_text(text, model):
                      for token, p in zip(tokens, probs)]
     return " ".join(colored_texts), fin_prob
 
+st.markdown("<h1 style='text-align: center;'>Explaining Recurrent Neural Networks</h1>", unsafe_allow_html=True)
 
-st.title("Explaining RNNs")
+st.markdown("<h3 style='text-align: right; color: gray;'>Made by Clay and Ihor</h3>", unsafe_allow_html=True)
+
+st.write('In this interactive app you will be able to explore why RNN produce why or another output and what makes difference for the model in the input. ' 
+         + 'The model that you will explore is a simple RNN that was built on IMDB reviews binary classification dataset (positive or negative review).')
+st.write('The model consists from embedding layer, LSTM, single hidden dense layer with 64 neurons with ReLu activation and dense output layer with a single neuron.')
+
+st.write('Proposed framework is illustrated on specific considerably simple model, however, it is general and can trivially be extended to larger and more complex models.')
 
 main_df = load_data("combined_sentiment_labelled.tsv")
-
-#embedding = load_pickled("train_embedding.pkl")
-
-#np.random.seed(SEED)
 
 main_model = load_main_model()
 
@@ -193,10 +196,10 @@ sen2vec_model_interm = tf.keras.Sequential([
 ])
 
 
-n_neighbor = st.slider(
-    "Choose the number of neighboring reviews to find",
-    min_value=50, max_value=len(main_df), value=50, step=50
-    )
+# n_neighbor = st.slider(
+#    "Choose the number of neighboring reviews to find",
+#    min_value=50, max_value=len(main_df), value=50, step=50
+#    )
 n_neighbor = 500 #fix
 
 #ixs = get_ixs(len(main_df), n_neighbor)
@@ -208,10 +211,17 @@ main_df = main_df.iloc[ixs, :]
 
 st.markdown('## Inference:')
 
+st.write('Firstly, let\'s try to get some insight how model works by observing seeing which words are considered to contribute to decision whether to output positive or negative.')
+st.write('Below you see five sampled reviews from the example dataset with prediction, confidence of the prediction and visualized word impacts. '
+         + 'Color represents positive (green), negative (red) or neutral (grey) impact on models prediction, namely how models prediction and confidence changed after seeing that word. ' 
+         + 'Opacity represents strength of impact - the higher the opacity, the more impact that word had!')
+            
 def sample_inference():
     idx = np.random.randint(0, len(colored), size=5)
+    st.markdown(f'---------------------------')
     for i in idx:
         st.markdown(colored[i], unsafe_allow_html=True)
+    st.markdown(f'---------------------------')
 
 if st.button('Sample another reviews'):
     sample_inference()
@@ -224,6 +234,9 @@ else:
 
 st.markdown('## Training:')
 
+st.write('Now let\'s see how model arrived at such decision by visualizing its training process. '
+         + 'In this part we will be working with a single sentence. Type your own or click a button to sample a random one!')
+            
 if st.button('Sample random review'):
     review = main_df.iloc[np.random.randint(0, len(main_df))].text
     text = st.text_input("Or type your review!", review)
@@ -232,8 +245,11 @@ else:
 
 if text != "":
 
+    st.write('Firstly, we will provide same type of visualization for the review over several epochs. '
+             + 'Observe the patterns in changes of the models confidence and how each word impacts the prediction.')
+    
     sentences = np.append(main_df["text"].values, text)
-
+    st.markdown(f'---------------------------')
     for i in range(0, 11, 2):
         main_model.load_weights(f"epoch{i}/")
         pred = color_text(text, model=main_model)
@@ -242,7 +258,15 @@ if text != "":
                     str(probability(pred[1])) + " | " +
                     pred[0],
                     unsafe_allow_html=True)
-
+    st.markdown(f'---------------------------')
+    
+    st.write('Now let\'s visualize feature space and how it is transformed while being passed through models layers.')
+    st.write('The leftmost plot is learned sentence embedding, '
+             + 'the middle one is output of embeddings being passed through LSTM '
+             + 'and the rightmost one is the output of LSTM output being passed through dense layer')
+    
+    st.write('Note that originally all feature spaces are of high dimensionality and we approximate them for visualization with Isomap.')
+    
     #for i in range(0, 11, 2):
     for i in [0, 4, 10]:
         st.markdown(f'#### Epoch {i}')
@@ -289,7 +313,7 @@ if text != "":
             y = 'y_raw',
             tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
             color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                      range=['red', 'green', 'blue'])),
+                                                      range=['red', 'green', 'blue']), legend=alt.Legend(symbolOpacity=1)),
             opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
         ).properties(
             title='Raw sentences',
@@ -304,7 +328,7 @@ if text != "":
             y = 'y_interm',
             tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
             color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                      range=['red', 'green', 'blue'])),
+                                                      range=['red', 'green', 'blue']), legend=alt.Legend(symbolOpacity=1)),
             opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
         ).properties(
             title='Intermediate state sentences',
@@ -319,7 +343,7 @@ if text != "":
             y = 'y_proc',
             tooltip =[alt.Tooltip('sentence'), alt.Tooltip('prob')],
             color = alt.Color('pred', scale=alt.Scale(domain=['Negative', 'Positive', 'User'],
-                                                      range=['red', 'green', 'blue'])),
+                                                      range=['red', 'green', 'blue']), legend=alt.Legend(symbolOpacity=1)),
             opacity=alt.condition(selector_embs, 'opacity', alt.value(0.05), legend=None)
         ).properties(
             title='Processed sentences',
