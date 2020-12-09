@@ -180,19 +180,19 @@ colored = load_pickled('colored.txt')
 
 def sen2vec(x):
     x = np.array([[process_text(xx[0])] for xx in x])
-    return main_model.get_layer(name='embedding')(main_model.get_layer(name="text_vectorization")(x))
+    return main_model.get_layer(index=1)(main_model.get_layer(index=0)(x))
 
 sen2vec_model = tf.keras.Sequential([
-        main_model.get_layer(name="text_vectorization"),
-        main_model.get_layer(name='embedding'),
-        main_model.get_layer(name='lstm'),
-        main_model.get_layer(name='dense')
+        main_model.get_layer(index=0),
+        main_model.get_layer(index=1),
+        main_model.get_layer(index=2),
+        main_model.get_layer(index=4)
     ])
 
 sen2vec_model_interm = tf.keras.Sequential([
-    main_model.get_layer(name="text_vectorization"),
-    main_model.get_layer(name='embedding'),
-    main_model.get_layer(name='lstm')
+    main_model.get_layer(index=0),
+    main_model.get_layer(index=1),
+    main_model.get_layer(index=2)
 ])
 
 
