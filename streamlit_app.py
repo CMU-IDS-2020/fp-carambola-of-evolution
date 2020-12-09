@@ -166,7 +166,7 @@ st.markdown("<h1 style='text-align: center;'>Explaining Recurrent Neural Network
 
 st.markdown("<h3 style='text-align: right; color: gray;'>Made by Clay and Ihor</h3>", unsafe_allow_html=True)
 
-st.write('In this interactive app you will be able to explore why RNN produce why or another output and what makes difference for the model in the input. ' 
+st.write('In this interactive app you will be able to explore why RNN produce one or another output and what makes difference for the model in the input. ' 
          + 'The model that you will explore is a simple RNN that was built on IMDB reviews binary classification dataset (positive or negative review).')
 st.write('The model consists from embedding layer, LSTM, single hidden dense layer with 64 neurons with ReLu activation and dense output layer with a single neuron.')
 
