@@ -166,7 +166,7 @@ st.markdown("<h1 style='text-align: center;'>Explaining Recurrent Neural Network
 
 st.markdown("<h3 style='text-align: right; color: gray;'>Made by Clay and Ihor</h3>", unsafe_allow_html=True)
 
-st.write('In this interactive app you will be able to explore why RNN produce why or another output and what makes difference for the model in the input. ' 
+st.write('In this interactive app you will be able to explore why RNN produce one or another output and what makes difference for the model in the input. ' 
          + 'The model that you will explore is a simple RNN that was built on IMDB reviews binary classification dataset (positive or negative review).')
 st.write('The model consists from embedding layer, LSTM, single hidden dense layer with 64 neurons with ReLu activation and dense output layer with a single neuron.')
 
@@ -180,19 +180,19 @@ colored = load_pickled('colored.txt')
 
 def sen2vec(x):
     x = np.array([[process_text(xx[0])] for xx in x])
-    return main_model.get_layer(name='embedding')(main_model.get_layer(name="text_vectorization")(x))
+    return main_model.get_layer(index=1)(main_model.get_layer(index=0)(x))
 
 sen2vec_model = tf.keras.Sequential([
-        main_model.get_layer(name="text_vectorization"),
-        main_model.get_layer(name='embedding'),
-        main_model.get_layer(name='lstm'),
-        main_model.get_layer(name='dense')
+        main_model.get_layer(index=0),
+        main_model.get_layer(index=1),
+        main_model.get_layer(index=2),
+        main_model.get_layer(index=4)
     ])
 
 sen2vec_model_interm = tf.keras.Sequential([
-    main_model.get_layer(name="text_vectorization"),
-    main_model.get_layer(name='embedding'),
-    main_model.get_layer(name='lstm')
+    main_model.get_layer(index=0),
+    main_model.get_layer(index=1),
+    main_model.get_layer(index=2)
 ])
 
 
@@ -211,7 +211,7 @@ main_df = main_df.iloc[ixs, :]
 
 st.markdown('## Inference:')
 
-st.write('Firstly, let\'s try to get some insight how model works by observing seeing which words are considered to contribute to decision whether to output positive or negative.')
+st.write('Firstly, let\'s try to get some insight how model works by observing which words contribute to decision whether to output positive or negative.')
 st.write('Below you see five sampled reviews from the example dataset with prediction, confidence of the prediction and visualized word impacts. '
          + 'Color represents positive (green), negative (red) or neutral (grey) impact on models prediction, namely how models prediction and confidence changed after seeing that word. ' 
          + 'Opacity represents strength of impact - the higher the opacity, the more impact that word had!')
@@ -241,7 +241,7 @@ if st.button('Sample random review'):
     review = main_df.iloc[np.random.randint(0, len(main_df))].text
     text = st.text_input("Or type your review!", review)
 else:
-    text = st.text_input("Or type your review!")
+    text = st.text_input("Or type your review!", "This application is really cool and authors are great!")
 
 if text != "":
 
@@ -263,7 +263,7 @@ if text != "":
     st.write('Now let\'s visualize feature space and how it is transformed while being passed through models layers.')
     st.write('The leftmost plot is learned sentence embedding, '
              + 'the middle one is output of embeddings being passed through LSTM '
-             + 'and the rightmost one is the output of LSTM output being passed through dense layer')
+             + 'and the rightmost one is the output of LSTM output being passed through dense layer.')
     
     st.write('Note that originally all feature spaces are of high dimensionality and we approximate them for visualization with Isomap.')
     
