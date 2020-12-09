@@ -263,7 +263,7 @@ if text != "":
     st.write('Now let\'s visualize feature space and how it is transformed while being passed through models layers.')
     st.write('The leftmost plot is learned sentence embedding, '
              + 'the middle one is output of embeddings being passed through LSTM '
-             + 'and the rightmost one is the output of LSTM output being passed through dense layer')
+             + 'and the rightmost one is the output of LSTM output being passed through dense layer.')
     
     st.write('Note that originally all feature spaces are of high dimensionality and we approximate them for visualization with Isomap.')
     
