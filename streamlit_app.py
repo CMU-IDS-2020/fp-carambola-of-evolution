@@ -241,7 +241,7 @@ if st.button('Sample random review'):
     review = main_df.iloc[np.random.randint(0, len(main_df))].text
     text = st.text_input("Or type your review!", review)
 else:
-    text = st.text_input("Or type your review!")
+    text = st.text_input("Or type your review!", "This application is really cool and authors are great!")
 
 if text != "":
 
