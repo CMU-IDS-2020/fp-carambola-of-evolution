@@ -211,7 +211,7 @@ main_df = main_df.iloc[ixs, :]
 
 st.markdown('## Inference:')
 
-st.write('Firstly, let\'s try to get some insight how model works by observing seeing which words are considered to contribute to decision whether to output positive or negative.')
+st.write('Firstly, let\'s try to get some insight how model works by observing which words are considered to contribute to decision whether to output positive or negative.')
 st.write('Below you see five sampled reviews from the example dataset with prediction, confidence of the prediction and visualized word impacts. '
          + 'Color represents positive (green), negative (red) or neutral (grey) impact on models prediction, namely how models prediction and confidence changed after seeing that word. ' 
          + 'Opacity represents strength of impact - the higher the opacity, the more impact that word had!')
