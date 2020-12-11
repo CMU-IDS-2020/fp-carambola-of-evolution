@@ -3,7 +3,10 @@
 
 # Explaining Recurrent Neural Networks by Leveraging InteractiveVisualizations
 
-
+<p float="left">
+  <img src="/tr1.jpg" width="100" />
+  <img src="/tr2.jpg" width="100" />
+</p>
 
 
 * **Online URL**: https://share.streamlit.io/cmu-ids-2020/fp-carambola-of-evolution/main
