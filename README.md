@@ -3,9 +3,9 @@
 
 # Explaining Recurrent Neural Networks by Leveraging InteractiveVisualizations
 
-<p float="left">
-  <img src="/tr1.jpg" width="100" />
-  <img src="/tr2.jpg" width="100" />
+<p float="middle">
+  <img src="/tr1.JPG" width="600" />
+  <img src="/tr2.JPG" width="600" />
 </p>
 
 
