@@ -264,7 +264,7 @@ if text != "":
     st.write('The leftmost plot is learned sentence embedding, '
              + 'the middle one is output of embeddings being passed through LSTM '
              + 'and the rightmost one is the output of LSTM output being passed through dense layer.')
-    
+    st.write('Charts are interactive in two ways - review text and probability will be shown on cursor hover and it\'s possible to select only subset of data by dragging a rectangle with mouse.')
     st.write('Note that originally all feature spaces are of high dimensionality and we approximate them for visualization with Isomap.')
     
     #for i in range(0, 11, 2):
