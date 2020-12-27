@@ -1,7 +1,7 @@
 # CMU Interactive Data Science Final Project
 ----------------------
 
-# Explaining Recurrent Neural Networks by Leveraging InteractiveVisualizations
+# Explaining Recurrent Neural Networks by Leveraging Interactive Visualizations
 
 <p float="middle">
   <img src="/tr1.JPG" width="600" />
